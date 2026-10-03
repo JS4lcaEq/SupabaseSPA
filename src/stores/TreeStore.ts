@@ -1,5 +1,6 @@
 import { ref, watch } from 'vue'
 import { defineStore } from 'pinia'
+import type { TreeNodeData } from 'element-plus'
 import { NodesStore, type NodeRow } from '@/stores/NodesStore'
 import { EdgesStore, type EdgeRow } from '@/stores/EdgesStore'
 
@@ -12,7 +13,11 @@ export type TreeView = {
   readonly title: string
 }
 
-function createView(path: string, node: NodeRow, edge: EdgeRow | null, childs: readonly TreeView[]): TreeView {
+export function asTreeView(data: TreeNodeData): TreeView {
+  return data as TreeView
+}
+
+function createView(path: string, node: NodeRow, edge: EdgeRow | null, childs: TreeView[]): TreeView {
   return {
     path,
     node,
@@ -30,7 +35,7 @@ function createView(path: string, node: NodeRow, edge: EdgeRow | null, childs: r
 export const treeProps = { value: 'path', label: 'title', children: 'childs' }
 
 export const TreeStore = defineStore('TreeStore', () => {
-  const roots = ref<readonly TreeView[]>([])
+  const roots = ref<TreeView[]>([])
   const nodes = NodesStore()
   const edges = EdgesStore()
 

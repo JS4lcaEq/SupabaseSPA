@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
-import { ElButton, ElCol, ElForm, ElFormItem, ElInput, ElRow, ElTreeV2 } from 'element-plus'
+import { ElButton, ElCol, ElForm, ElFormItem, ElInput, ElRow, ElTreeV2, type TreeNodeData } from 'element-plus'
 import { EdgesStore, type EdgeRow } from '@/stores/EdgesStore'
 import { NodesStore } from '@/stores/NodesStore'
-import { TreeStore as useTreeStore, treeProps, type TreeView } from '@/stores/TreeStore'
+import { TreeStore as useTreeStore, asTreeView, treeProps, type TreeView } from '@/stores/TreeStore'
 
 const TreeStore = useTreeStore()
 const nodes = NodesStore()
@@ -99,26 +99,28 @@ async function addNode() {
 }
 const opened = new Set<number>()
 
-function onDragOver(data: TreeView) {
-  dropKey.value = data.id
+function onDragOver(data: TreeNodeData) {
+  dropKey.value = asTreeView(data).id
 }
 
 function onDragEnd() {
   dropKey.value = ''
 }
 
-function onDragStart(data: TreeView) {
-  dndNewEdge.cid = Number(data.node.id)
-  dndOldEdge.pid = Number(data.edge?.pid ?? 0)
-  dndOldEdge.cid = Number(data.edge?.cid ?? 0)
+function onDragStart(data: TreeNodeData) {
+  const row = asTreeView(data)
+  dndNewEdge.cid = Number(row.node.id)
+  dndOldEdge.pid = Number(row.edge?.pid ?? 0)
+  dndOldEdge.cid = Number(row.edge?.cid ?? 0)
 }
 
-async function onNodeDrop(data: TreeView) {
-  dndNewEdge.pid = Number(data.node.id)
+async function onNodeDrop(data: TreeNodeData) {
+  const row = asTreeView(data)
+  dndNewEdge.pid = Number(row.node.id)
   if (dndOldEdge.pid && dndOldEdge.cid) await edges.edgeDelete(dndOldEdge.pid, dndOldEdge.cid)
   if (dndNewEdge.pid && dndNewEdge.cid) await edges.edgeAdd(dndNewEdge.pid, dndNewEdge.cid)
-  if (!expanded.value.includes(data.id)) expanded.value = [...expanded.value, data.id]
-  const droppedPath = `${data.id}|${dndNewEdge.cid}`
+  if (!expanded.value.includes(row.id)) expanded.value = [...expanded.value, row.id]
+  const droppedPath = `${row.id}|${dndNewEdge.cid}`
   function find(list: readonly TreeView[]): TreeView | null {
     for (const item of list) {
       if (item.path === droppedPath) return item
@@ -135,12 +137,13 @@ async function onNodeDrop(data: TreeView) {
   dropKey.value = ''
 }
 
-function onNodeClick(data: TreeView) {
-  current.value = data
-  nodeForm.id = String(data.node.id)
-  nodeForm.nm = data.node.nm ?? ''
-  const id = Number(data.node.id)
-  if (data.childs.length > 0 || opened.has(id)) return
+function onNodeClick(data: TreeNodeData) {
+  const row = asTreeView(data)
+  current.value = row
+  nodeForm.id = String(row.node.id)
+  nodeForm.nm = row.node.nm ?? ''
+  const id = Number(row.node.id)
+  if (row.childs.length > 0 || opened.has(id)) return
   opened.add(id)
   void loadBranch(id)
 }
@@ -154,12 +157,14 @@ async function loadBranch(id: number) {
 }
 
 
-function onNodeExpand(data: TreeView) {
-  if (!expanded.value.includes(data.id)) expanded.value = [...expanded.value, data.id]
+function onNodeExpand(data: TreeNodeData) {
+  const id = asTreeView(data).id
+  if (!expanded.value.includes(id)) expanded.value = [...expanded.value, id]
 }
 
-function onNodeCollapse(data: TreeView) {
-  expanded.value = expanded.value.filter((id) => id !== data.id)
+function onNodeCollapse(data: TreeNodeData) {
+  const id = asTreeView(data).id
+  expanded.value = expanded.value.filter((key) => key !== id)
 }
 
 watch(
