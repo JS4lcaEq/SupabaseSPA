@@ -38,6 +38,8 @@
 - `src/router` — маршруты. Главная страница собирает список из `meta` этих маршрутов
 - `src/views` — страницы, по одной на маршрут: Home, About, Tree, TreeV2, Settings, Test Supabase
 - `src/stores` — Pinia. `NodesStore` и `EdgesStore` держат кэш загруженных строк (`held()`) и счётчик `revision`. `TreeStore` по этим счётчикам собирает лес: корень — узел без входящего ребра среди уже загруженных, путь узла — цепочка id через `|`, повтор id в стеке обрывает ветку
+- `ElTreeV2` не обобщён по типу узла. Ключ — `path`, подпись — `title`, дети — `childs`. Событие приходит как `TreeNodeData` и сужается через `asTreeView`
+- `env.d.ts` — модуль, в файле есть `export {}`. `declare module 'vue-router'` только дополняет `RouteMeta`. `ImportMetaEnv` объявлен в `declare global`
 - `src/assets` — стили и файлы, которые импортирует сборка
 - `public` — файлы как есть
 - алиас `@` указывает на `src`
@@ -51,7 +53,8 @@
 - Ключ `service_role` в браузер, во фронтенд и в репозиторий не класть.
 - Схему, хранимые процедуры и DDL не менять. Это зона Grok-бота `DB`, см. раздел «Зоны ответственности».
 - Генератор тестовых данных `gen_test_data` не вызывать без прямого указания.
-- Экраны ходят в RPC: `node_list`, `node_save`, `node_delete`, `node_all`, `edge_list`, `edge_add`, `edge_delete`, `edge_delete_end`, `edge_all`, `db_ping`. Дерево на `/tree` собирается на клиенте из `node_list` и `edge_list`. `tree_view` вызывается с экрана Test Supabase.
+- Контракт таблиц и хранимок — репозиторий `JS4lcaEq/supabase`: файлы `ddl`, `COMMENT ON`, представление `bot_index`, перечень в `README` того репозитория. В этот репозиторий список процедур не копировать.
+- Дерево на `/tree` собирается на клиенте из загруженных узлов и рёбер. Экран Test Supabase вызывает серверный `tree_view`.
 
 ## Команды
 
