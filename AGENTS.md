@@ -1,0 +1,68 @@
+# Основной функционал
+
+Браузерное SPA на Vue для управления направленным графом.
+Узел хранит `id` и имя `nm`. Ребро направлено от родителя `pid` к ребёнку `cid`.
+Рабочий экран — дерево: ленивая подгрузка ветки, правка имени, создание и удаление узла, связь и разрыв ребра.
+
+## Стилевые предпочтения разработчика
+
+Тексты для человека — на русском: подписи, сообщения, этот файл.
+Идентификаторы в коде — на английском.
+`meta.header` маршрута — короткое английское имя экрана, `meta.description` — русская фраза. Шапка берёт оба поля.
+Новый экран сразу добавлять в `src/router`. Файл во `src/views` без маршрута не оставлять.
+
+## Стек
+
+- Vue 3, TypeScript, Vite, SPA
+- Vue Router 5, история `createWebHashHistory`
+- Pinia. Хранилища: `NodesStore`, `EdgesStore`, `TreeStore`, `SettingsStore`. Вызов без префикса `use`
+- Element Plus
+- Vitest. Своих тестов пока нет, в конфиге включён `passWithNoTests`
+- Пакетный менеджер и рантайм скриптов: bun. Node.js и npm не использовать: не `npm install`, не `npx`, не `node` для скриптов проекта
+- Пакет `@supabase/supabase-js` не подключать. Запросы — `fetch` к PostgREST
+
+## Хранение исходного кода
+
+Локальный репозиторий: `C:\Repositories\Grok\SupabaseSPA`, git `https://github.com/JS4lcaEq/SupabaseSPA`.
+
+## Зоны ответственности
+
+Фронтенд этого репозитория ведётся здесь: экраны, сторы, роутер, сборка и клиентские запросы.
+Пользователь не ведёт SPA через Grok bot: этот опыт для него субъективно хуже.
+Схема, хранимые процедуры и DDL остаются у Grok-бота `DB` и репозитория `JS4lcaEq/supabase`. В этом репозитории их не менять.
+
+## Файловая структура
+
+- `src/main.ts` — точка входа, Pinia, роутер, Element Plus
+- `src/App.vue` — шапка, `RouterView`, подвал
+- `src/router` — маршруты. Главная страница собирает список из `meta` этих маршрутов
+- `src/views` — страницы, по одной на маршрут: Home, About, Tree, TreeV2, Settings, Test Supabase
+- `src/stores` — Pinia. `NodesStore` и `EdgesStore` держат кэш загруженных строк (`held()`) и счётчик `revision`. `TreeStore` по этим счётчикам собирает лес: корень — узел без входящего ребра среди уже загруженных, путь узла — цепочка id через `|`, повтор id в стеке обрывает ветку
+- `src/assets` — стили и файлы, которые импортирует сборка
+- `public` — файлы как есть
+- алиас `@` указывает на `src`
+- Каталога `src/components` нет. Общий компонент заводить, когда один и тот же кусок нужен двум экранам
+
+## Данные
+
+- Облачный проект Supabase `graph`.
+- Адрес и ключ только из локального `.env`: `VITE_SUPABASE_URL` (хост без `/rest/v1/`) и `VITE_SUPABASE_ANON_KEY` (anon, publishable). В исходники хост, ключ и JWT не писать. Единственный env-файл для коммита — `.env.example` с пустыми значениями.
+- Проверка: `bun run check:supabase`. Скрипт завершается с ошибкой, если в файлах вне `.md` есть `supabase.co`, `service_role` или JWT.
+- Ключ `service_role` в браузер, во фронтенд и в репозиторий не класть.
+- Схему, хранимые процедуры и DDL не менять. Это зона Grok-бота `DB`, см. раздел «Зоны ответственности».
+- Генератор тестовых данных `gen_test_data` не вызывать без прямого указания.
+- Экраны ходят в RPC: `node_list`, `node_save`, `node_delete`, `node_all`, `edge_list`, `edge_add`, `edge_delete`, `edge_delete_end`, `edge_all`, `db_ping`. Дерево на `/tree` собирается на клиенте из `node_list` и `edge_list`. `tree_view` вызывается с экрана Test Supabase.
+
+## Команды
+
+```sh
+bun install
+bun dev
+bun run build
+bun run build-only
+bun test:unit
+bun run type-check
+bun run check:supabase
+```
+
+`bun run build` включает `vue-tsc --build`. Для файлов `.vue` не использовать голый `tsc`. Сборку без проверки типов запускать как `bun run build-only`.
