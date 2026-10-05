@@ -39,7 +39,8 @@ const route = useRoute()
 }
 
 header {
-  background-color: #ddd;
+  background-color: #000;
+  color: #ccc;
 }
 
 main {
